@@ -5,6 +5,8 @@ The point for this sheet is to be quite linear, so that you could theoretically 
 
 Besides the original sources, this work is (very) strongly inspired by the vulgarisation efforts of Alexandre Proutière in his [RL course](http://www.it.uu.se/research/systems_and_control/education/2017/relearn) and Josh Achiam in OpenAI's [Spinning Up](https://spinningup.openai.com/en/latest/).
 
+I also used Francesco Saverio Zuppichini's own [RL Cheatsheet](https://github.com/FrancescoSaverioZuppichini/Reinforcement-Learning-Cheat-Sheet) as a template for the latex.
+
 
 ## Sources :
 
