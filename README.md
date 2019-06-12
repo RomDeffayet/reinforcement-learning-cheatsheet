@@ -1,5 +1,7 @@
 # Reinforcement Learning Cheatsheet
 
+[WIP]
+
 This is a cheatsheet aggregating several sources in order to produce a well-rounded RL overview. Please keep in mind this was made by me and for me, which explains some things may be the way they are. 
 The point for this sheet is to be quite linear, so that you could theoretically read it and fully understand the content. Consequently, the style is sometimes verbose, in order not to give up some insights. 
 
