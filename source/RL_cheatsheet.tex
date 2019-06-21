@@ -19,33 +19,6 @@
             \documentclass{article}
 \usepackage[thinlines]{easytable}
 
-% To make this come out properly in landscape mode, do one of the following
-% 1.
-%  pdflatex rl_cheatsheet.tex
-%
-% 2.
-%  latex rl_cheatsheet.tex
-%  dvips -P pdf  -t landscape rl_cheatsheet.dvi
-%  ps2pdf rl_cheatsheet.ps
-
-
-% If you're reading this, be prepared for confusion.  Making this was
-% a learning experience for me, and it shows.  Much of the placement
-% was hacked in; if you make it better, let me know...
-
-
-% 2008-04
-% Changed page margin code to use the geometry package. Also added code for
-% conditional page margins, depending on paper size. Thanks to Uwe Ziegenhagen
-% for the suggestions.
-
-% 2006-08
-% Made changes based on suggestions from Gene Cooperman. <gene at ccs.neu.edu>
-
-
-% To Do:
-% \listoffigures \listoftables
-% \setcounter{secnumdepth}{0}
 
 
 % This sets page margins to .5 inch if using letter paper, and to 1cm
@@ -763,7 +736,7 @@ Finally, to boost the learning phase, we can add a zero-mean gaussian noise $\ma
 \begin{algorithm}[H]
  Initialize $\theta, \Phi, \theta_{tg}, \Phi_{tg} \in \mathbb{R}^n, B, s_1$\\
  \For{$t \geqslant 1$}{
-    Noisy Deterministic policy : $\mu_{noisy} = \textup{clip}(\mu_\theta(s) + \espilon, a_{low}, a_{high})$ where $\epsilon \sim \mathcal{N}$  \\
+    Noisy Deterministic policy : $\mu_{noisy} = \textup{clip}(\mu_\theta(s) + \epsilon, a_{low}, a_{high})$ where $\epsilon \sim \mathcal{N}$  \\
     Observe and store $(s_t, a_t, r_t, s_{t+1})$ in $B$\\
     \If{$s_{t+1}$ \textup{is terminal or ep. reached } $max\_len$}  {
         Set $s_{t+2} = s$ where s is a starting state.\\
@@ -815,7 +788,7 @@ Multi-Agent DDPG (MADDPG) adds modifications to the DDPG algorithm:\\
  \textbf{For Each agent :}\\
  Initialize $\theta, \Phi, \theta_{tg}, \Phi_{tg} \in \mathbb{R}^n, B, s_1 $(and optionnaly $\Phi_i^j$)\\
  \For{$t \geqslant 1$}{
-    Noisy Deterministic policy : $\mu_{noisy} = \textup{clip}(\mu_{\theta}(s) + \espilon, a_{low}, a_{high})$ where $\epsilon \sim \mathcal{N}$  \\
+    Noisy Deterministic policy : $\mu_{noisy} = \textup{clip}(\mu_{\theta}(s) + \epsilon, a_{low}, a_{high})$ where $\epsilon \sim \mathcal{N}$  \\
     Observe and store $(s_t, a_t, r_t, s_{t+1})$ in $B$\\
     \If{$s_{t+1}$ \textup{is terminal or ep. reached } $max\_len$}  {
         Set $s_{t+2} = s$ where s is a starting state.\\
@@ -858,6 +831,43 @@ Multi-Agent DDPG (MADDPG) adds modifications to the DDPG algorithm:\\
 
 \section{TD3}
 
+DDPG suffers from a common unstability which worsens the performance : in some cases it may overestimate the Q-function, leading to broken policies. Twin Delayed DDPG (TD3) implements three tricks to enhance DDPG's performance :
+
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Clipped Double Q-Learning} : We train two Q-functions instead of one, and only keep the smaller one to compute the target.
+    \item \textbf{Delayed Policy Update} : We update the policy less frequently than the Q-function (typically half as many times).
+    \item\textbf{Target Policy Smoothing} : We add noise to the target action so that the Q-function is smoother.
+\end{itemize}
+
+
+\begin{algorithm}[H]
+ Initialize $\theta, \Phi_1, \Phi_2, \theta_{tg}, \Phi_{1,tg}, \Phi_{2,tg} \in \mathbb{R}^n, B, s_1$\\
+ \For{$t \geqslant 1$}{
+    Noisy Deterministic policy : $\mu_{noisy} = \textup{clip}(\mu_\theta(s) + \epsilon, a_{low}, a_{high})$ where $\epsilon \sim \mathcal{N}$  \\
+    Observe and store $(s_t, a_t, r_t, s_{t+1})$ in $B$\\
+    \If{$s_{t+1}$ \textup{is terminal or ep. reached } $max\_len$}  {
+        Set $s_{t+2} = s$ where s is a starting state.\\
+        Sample $k$ experiences $(s_i, a_i, r_i, s'_i)$ from $B$ \\
+        \For{$1 \leqslant i \leqslant k$:}{
+            $a'(s'_i) = \textup{clip}(\mu_{\theta_{tg}}(s'_i) + \textup{clip}(\epsilon, -c, c), a_{low}, a_{high})$ where $\epsilon \sim \mathcal{N}(0,\sigma)$\\
+            $y_i = \left\{\begin{matrix}
+                        r_i & \textup{if end}\\ 
+                        r_i + \lambda \underset{j=1,2}{\min} Q_{\Phi_{j,tg}}(s'_i, a'(s'_i)) & \textup{otherwise} 
+                        \end{matrix}\right.$\\
+            Update critics $\Phi_j (j=1,2)$ by gradient descent :
+            $\Phi_j \leftarrow \Phi_j + \alpha ( y_i - Q_{\Phi_j}(s_i, a_i)) \nabla_{\Phi_j} Q_{\Phi_j}(s_i,a_i)$\\
+            \If{$i \mod policy\_delay = 0$}  {
+                Update actor $\theta$ by gradient ascent :
+                \theta \leftarrow \theta + \beta \, \nabla_\theta Q_{\Phi_1}(s_i, \mu_\theta(s_i))\\
+            }
+        }
+        Update targets : $\left\{\begin{matrix} 
+        \Phi_{tg} \leftarrow \tau \Phi_{tg} + (1-\tau) \Phi\\
+        \theta_{j,tg} \leftarrow \tau \theta_{j,tg} + (1-\tau)  \theta_j \end{matrix}\right.$\\
+    }
+ }
+ \caption{TD3}
+\end{algorithm}
 
 %----------------------------------------------------------------------------------------
 %	A2C
